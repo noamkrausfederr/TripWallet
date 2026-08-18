@@ -31,7 +31,7 @@ export default function AuthPage() {
         <section className="auth-card" aria-labelledby="auth-title">
           <p className="auth-kicker">{'// WELCOME BACK'}</p>
           <h1 id="auth-title">Sign in /<br />Sign up</h1>
-          <p>Enter your email. If you already have an account, we&apos;ll sign you in. Otherwise, we&apos;ll send you a sign-up link.</p>
+          <p>Enter your email and we&apos;ll send you a secure sign-in link. Click it to sign in or create your account.</p>
 
           <div className="field-group">
             <label htmlFor="email">Email address</label>
