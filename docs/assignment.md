@@ -25,7 +25,7 @@ This document summarizes the product, technical design, tests, security, scalabi
 ### Notable implementation choices
 
 - Keep most CRUD operations on the frontend using the Supabase publishable key + RLS — simplicity for an educational assignment. Server APIs use the server secret key only where necessary (signed URLs, storage cleanup).
-- One uploaded document per booking is supported (recorded in `booking_documents`), which keeps UX and DB simple.
+- A booking can have zero or more uploaded documents (recorded in `booking_documents`).
 
 ## API endpoints (Next.js serverless)
 
@@ -88,8 +88,8 @@ Testing approach: tests mock Supabase clients to validate server-side ownership 
 - **Secrets**: `SUPABASE_SECRET_KEY` and `GEOAPIFY_API_KEY` are stored only on the server (Vercel environment variables, marked as secret). They are never sent to the browser.
 
 ### Input validation & error handling
-- **File uploads**: validated on frontend (max 5 MB, allowed types: PDF, JPG, PNG) and re-validated on server before storage.
-- **Date inputs**: bookings' `booking_date` is validated to be within the trip's date range (server-side query check).
+- **File uploads**: validated before upload on the client (max 5 MB, allowed types: PDF, JPG, PNG). Storage access is restricted by owner-only policies.
+- **Date inputs**: bookings' `booking_date` is validated against the parent trip's date range before create or update.
 - **API errors**: errors are caught and logged; sensitive details (e.g., database errors) are not exposed to the client.
 
 ### Known security considerations & future improvements

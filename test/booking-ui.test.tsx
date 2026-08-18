@@ -25,7 +25,7 @@ vi.mock('../src/lib/docsApi', () => ({
 
 import NewBooking from '../src/pages/trips/[id]/bookings/new';
 import BookingDetails from '../src/pages/trips/[id]/bookings/[bid]';
-import { getSignedUrl } from '../src/lib/docsApi';
+import { deleteDocument, getSignedUrl } from '../src/lib/docsApi';
 
 const booking = {
   id: 'booking-1',
@@ -81,6 +81,19 @@ describe('Booking UI flows', () => {
     await waitFor(() => expect(getSignedUrl).toHaveBeenCalledWith('doc-1'));
     expect(openSpy).toHaveBeenCalled();
     openSpy.mockRestore();
+  });
+
+  it('deletes an attached document from the booking details page', async () => {
+    const { supabase } = await import('../src/lib/supabaseClient');
+    supabase.from = mockBookingDetails() as any;
+
+    render(<BookingDetails />);
+    await screen.findByText('ticket.pdf');
+    fireEvent.click(screen.getByRole('button', { name: /delete document/i }));
+
+    await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('doc-1'));
+    expect(screen.queryByText('ticket.pdf')).not.toBeInTheDocument();
+    expect(screen.getByText(/No documents attached/i)).toBeInTheDocument();
   });
 
   it('shows an empty state when a reservation has no documents', async () => {

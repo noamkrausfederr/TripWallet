@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../../../lib/supabaseClient';
 import { isAllowedFile, storageSafeFileName } from '../../../../lib/fileHelpers';
+import { isBookingDateWithinTrip } from '../../../../lib/bookingValidation';
 import AddressAutocomplete from '../../../../components/AddressAutocomplete';
 
 export default function NewBooking() {
@@ -20,19 +21,42 @@ export default function NewBooking() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
 
+  async function rollbackBooking(bookingId: string, storagePath?: string) {
+    if (storagePath) await supabase.storage.from('documents').remove([storagePath]);
+    await supabase.from('bookings').delete().eq('id', bookingId);
+  }
+
   async function handleCreate() {
     setError('');
     setSuccess('');
     setLoading(true);
     if (!id) return setError('Missing trip id');
-    if (!title || !date || !address.trim()) {
+    if (!title.trim() || !date || !address.trim()) {
       setLoading(false);
       return setError('Title, date, and address are required');
+    }
+    if (file && !isAllowedFile(file)) {
+      setLoading(false);
+      return setError('Invalid file type or too large (max 5MB)');
     }
     const user = await supabase.auth.getUser().then((r) => r.data.user);
     if (!user) {
       setLoading(false);
       return setError('Not authenticated');
+    }
+
+    const { data: trip, error: tripError } = await supabase
+      .from('trips')
+      .select('start_date,end_date')
+      .eq('id', id)
+      .single();
+    if (tripError || !trip) {
+      setLoading(false);
+      return setError('Trip not found or you do not have access to it');
+    }
+    if (!isBookingDateWithinTrip(date, trip.start_date, trip.end_date)) {
+      setLoading(false);
+      return setError('Booking date must be within the trip dates');
     }
 
     const { data: booking, error: bErr } = await supabase
@@ -41,7 +65,7 @@ export default function NewBooking() {
         {
           trip_id: id,
           user_id: user.id,
-          title,
+          title: title.trim(),
           type,
           booking_date: date,
           booking_time: time || null,
@@ -59,16 +83,13 @@ export default function NewBooking() {
     }
 
     if (file) {
-      if (!isAllowedFile(file)) {
-        setLoading(false);
-        return setError('Invalid file type or too large (max 5MB)');
-      }
       const path = `${user.id}/${booking.id}/${storageSafeFileName(file.name)}`;
       const { error: upErr } = await supabase.storage.from('documents').upload(path, file, {
         cacheControl: '3600',
         upsert: false,
       });
       if (upErr) {
+        await rollbackBooking(booking.id);
         setLoading(false);
         return setError(`File upload failed: ${upErr.message}`);
       }
@@ -82,6 +103,7 @@ export default function NewBooking() {
         },
       ]);
       if (docErr) {
+        await rollbackBooking(booking.id, path);
         setLoading(false);
         return setError(`Document record failed: ${docErr.message}`);
       }
@@ -153,7 +175,7 @@ export default function NewBooking() {
 
         <div className="field-group">
           <label htmlFor="file">Upload ticket/confirmation (PDF, JPG, PNG, max 5MB)</label>
-          <input id="file" type="file" accept=".pdf,image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          <input id="file" type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
         </div>
 
         {error && <p className="form-note" style={{ color: '#bf2600' }}>{error}</p>}

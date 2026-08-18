@@ -19,30 +19,29 @@ function formatDate(value: string) {
 
 export default function TripsPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
-      const user = await supabase.auth.getUser().then((r) => r.data.user);
-      if (!user) return;
-      const { data, error } = await supabase
-        .from('trips')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('start_date', { ascending: true });
-      if (error) {
-        console.error(error);
-      } else {
-        setTrips(data || []);
+      try {
+        const user = await supabase.auth.getUser().then((r) => r.data.user);
+        if (!user) return;
+        const { data, error } = await supabase
+          .from('trips')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('start_date', { ascending: true });
+        if (error) {
+          console.error(error);
+        } else {
+          setTrips(data || []);
+        }
+      } finally {
+        setLoading(false);
       }
     }
     load();
   }, []);
-
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(false);
-  }, [trips]);
 
   return (
     <main>

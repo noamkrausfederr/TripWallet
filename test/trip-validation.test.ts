@@ -1,16 +1,13 @@
 import { describe, it, expect } from 'vitest';
-
-function isEndDateValid(start: string, end: string) {
-  return new Date(end) >= new Date(start);
-}
+import { isBookingDateWithinTrip } from '../src/lib/bookingValidation';
 
 describe('Trip date validation', () => {
   it('accepts end date equal to start date', () => {
-    expect(isEndDateValid('2026-10-01', '2026-10-01')).toBe(true);
+    expect(isBookingDateWithinTrip('2026-10-01', '2026-10-01', '2026-10-01')).toBe(true);
   });
 
-  it('rejects end date before start date', () => {
-    expect(isEndDateValid('2026-10-05', '2026-10-01')).toBe(false);
+  it('rejects a booking outside the trip date range', () => {
+    expect(isBookingDateWithinTrip('2026-10-05', '2026-10-01', '2026-10-04')).toBe(false);
   });
 });
 

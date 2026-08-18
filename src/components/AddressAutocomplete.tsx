@@ -10,19 +10,13 @@ type Props = {
 };
 
 export default function AddressAutocomplete({ id, value, onChange, required }: Props) {
-  const [mounted, setMounted] = useState(false);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [selectionComplete, setSelectionComplete] = useState(false);
   const requestNumber = useRef(0);
 
-  useEffect(() => setMounted(true), []);
-
   useEffect(() => {
-    if (!mounted || selectionComplete || value.trim().length < 3) {
-      setSuggestions([]);
-      return;
-    }
+    if (selectionComplete || value.trim().length < 3) return;
 
     const controller = new AbortController();
     const currentRequest = ++requestNumber.current;
@@ -46,7 +40,7 @@ export default function AddressAutocomplete({ id, value, onChange, required }: P
       controller.abort();
       window.clearTimeout(timeout);
     };
-  }, [mounted, selectionComplete, value]);
+  }, [selectionComplete, value]);
 
   function chooseSuggestion(suggestion: AddressSuggestion) {
     setSelectionComplete(true);
@@ -79,20 +73,19 @@ export default function AddressAutocomplete({ id, value, onChange, required }: P
       autoComplete="street-address"
       role="combobox"
       aria-autocomplete="list"
-      aria-controls={mounted ? `${id}-suggestions` : undefined}
-      aria-expanded={mounted && suggestions.length > 0}
-      aria-activedescendant={mounted && activeIndex >= 0 ? `${id}-option-${activeIndex}` : undefined}
+      aria-controls={`${id}-suggestions`}
+      aria-expanded={suggestions.length > 0}
+      aria-activedescendant={activeIndex >= 0 ? `${id}-option-${activeIndex}` : undefined}
       onChange={(event) => {
         setSelectionComplete(false);
+        setSuggestions([]);
+        setActiveIndex(-1);
         onChange(event.target.value);
       }}
       onKeyDown={handleKeyDown}
       onBlur={() => window.setTimeout(() => setSuggestions([]), 150)}
     />
   );
-
-  // Keep server and initial browser markup identical, then add suggestions.
-  if (!mounted) return addressInput;
 
   return (
     <div className="address-autocomplete">

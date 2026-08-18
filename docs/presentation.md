@@ -38,15 +38,15 @@ Use this short outline to explain and demo your project in a 10–15 minute slot
 - Save the booking.
 - Show the booking appears on the trip page, sorted chronologically.
 
-### 2.4 View ticket (1 minute)
-- Click "View ticket" on a booking.
+### 2.4 View document (1 minute)
+- Click "View document" on a booking.
 - Show a new browser tab opens with the document (short-lived signed URL).
 - Explain: "This is a secure, time-limited link—only you can view your documents, and the link expires after 1 minute."
 
 ### 2.5 Edit and delete (1 minute)
 - Edit a booking: change the title or time, save, and show the update.
-- Delete a booking (or delete a document from a booking).
-- Confirm it's removed from the UI and explain deletion cleans up Supabase Storage.
+- Delete an individual document, then delete a booking.
+- Confirm each is removed from the UI and explain deletion cleans up Supabase Storage.
 
 ---
 
@@ -80,12 +80,12 @@ Backend: Supabase (Postgres + Auth + Storage)
 - `profiles` — user accounts (managed by Supabase Auth).
 - `trips` — user's trips (name, destination, dates).
 - `bookings` — bookings within a trip (title, type, date, address, notes).
-- `booking_documents` — one uploaded document per booking (filename, storage path).
+- `booking_documents` — uploaded documents per booking (filename, storage path).
 
 **Key relationships:**
 - A user has many trips.
 - A trip has many bookings.
-- A booking has zero or one document.
+- A booking has zero or more documents.
 
 **Indexes**: Trip user ID, booking trip ID, booking user ID, and booking date are indexed for fast queries.
 
@@ -96,7 +96,7 @@ Backend: Supabase (Postgres + Auth + Storage)
 **What we test:**
 - **Unit tests**: Trip date validation, file size/type validation, booking sort order.
 - **API security tests**: Endpoints require authentication; users cannot access other users' data.
-- **UI tests**: Booking creation flow, file upload, deletion.
+- **UI tests**: Booking creation flow, file upload, signed URL viewing, and document deletion.
 
 **Current test suite: 16 tests, all passing** ✓
 

@@ -6,9 +6,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const text = typeof req.query.text === 'string' ? req.query.text.trim() : '';
   if (text.length < 3) return res.status(200).json({ results: [] });
 
-  // Keep the provider key server-only. The public-key fallback supports an
-  // existing deployment while it is migrated to the private variable.
-  const apiKey = process.env.GEOAPIFY_API_KEY || process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY;
+  // Keep the provider key server-only.
+  const apiKey = process.env.GEOAPIFY_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'Address autocomplete is not configured.' });
 
   try {

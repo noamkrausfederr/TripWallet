@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { getSignedUrl } from '../../../../../lib/docsApi';
+import { deleteDocument, getSignedUrl } from '../../../../../lib/docsApi';
 import { supabase } from '../../../../../lib/supabaseClient';
 
 type Document = { id: string; file_name: string; file_type: string };
@@ -30,6 +30,7 @@ export default function BookingDetails() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!bid) return;
@@ -58,6 +59,20 @@ export default function BookingDetails() {
       window.open(url, '_blank', 'noopener,noreferrer');
     } catch (err: any) {
       setError(`Unable to open document: ${err.message || err}`);
+    }
+  }
+
+  async function handleDeleteDocument(documentId: string) {
+    if (!confirm('Delete this document?')) return;
+    setError('');
+    setDeletingDocumentId(documentId);
+    try {
+      await deleteDocument(documentId);
+      setDocuments((current) => current.filter((document) => document.id !== documentId));
+    } catch (err: any) {
+      setError(`Unable to delete document: ${err.message || err}`);
+    } finally {
+      setDeletingDocumentId(null);
     }
   }
 
@@ -105,7 +120,16 @@ export default function BookingDetails() {
                           <div className="document-name">{document.file_name}</div>
                           <div className="meta">{document.file_type || 'Uploaded document'}</div>
                         </div>
-                        <button className="form-link-action" onClick={() => openDocument(document.id)}>VIEW DOCUMENT</button>
+                        <div className="document-actions">
+                          <button className="form-link-action" onClick={() => openDocument(document.id)}>VIEW DOCUMENT</button>
+                          <button
+                            className="form-link-action"
+                            onClick={() => handleDeleteDocument(document.id)}
+                            disabled={deletingDocumentId === document.id}
+                          >
+                            {deletingDocumentId === document.id ? 'DELETING…' : 'DELETE DOCUMENT'}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../../../../lib/supabaseClient';
 import { isAllowedFile, storageSafeFileName } from '../../../../../lib/fileHelpers';
+import { isBookingDateWithinTrip } from '../../../../../lib/bookingValidation';
 import { cleanupBookingDocuments } from '../../../../../lib/docsApi';
 import AddressAutocomplete from '../../../../../components/AddressAutocomplete';
 
@@ -31,14 +32,31 @@ export default function EditBooking() {
     setSuccess('');
     setSaving(true);
     if (!booking) return;
-    if (!booking.address?.trim()) {
+    if (!booking.title?.trim() || !booking.booking_date || !booking.address?.trim()) {
       setSaving(false);
-      return setError('Address is required');
+      return setError('Title, date, and address are required');
+    }
+    const { data: trip, error: tripError } = await supabase
+      .from('trips')
+      .select('start_date,end_date')
+      .eq('id', booking.trip_id)
+      .single();
+    if (tripError || !trip) {
+      setSaving(false);
+      return setError('Trip not found or you do not have access to it');
+    }
+    if (!isBookingDateWithinTrip(booking.booking_date, trip.start_date, trip.end_date)) {
+      setSaving(false);
+      return setError('Booking date must be within the trip dates');
+    }
+    if (file && !isAllowedFile(file)) {
+      setSaving(false);
+      return setError('Invalid file type or too large (max 5MB)');
     }
     const { error: uErr } = await supabase
       .from('bookings')
       .update({
-        title: booking.title,
+        title: booking.title.trim(),
         type: booking.type,
         booking_date: booking.booking_date,
         booking_time: booking.booking_time,
@@ -53,10 +71,6 @@ export default function EditBooking() {
     }
 
     if (file) {
-      if (!isAllowedFile(file)) {
-        setSaving(false);
-        return setError('Invalid file');
-      }
       const user = await supabase.auth.getUser().then((r) => r.data.user);
       if (!user) {
         setSaving(false);
@@ -198,7 +212,7 @@ export default function EditBooking() {
 
         <div className="field-group">
           <label htmlFor="file">Upload new ticket/confirmation</label>
-          <input id="file" type="file" accept=".pdf,image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          <input id="file" type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
         </div>
 
         {error && <p className="form-note" style={{ color: '#bf2600' }}>{error}</p>}

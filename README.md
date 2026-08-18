@@ -2,7 +2,13 @@
 
 Trip Wallet is a small Next.js + Supabase application for storing travel bookings and confirmation documents.
 
-This README covers local setup, running tests, and deployment steps. For assignment documentation, see `docs/assignment.md`.
+## Submission links
+
+- Live application: [trip-wallet-seven.vercel.app](https://trip-wallet-seven.vercel.app)
+- Source repository: [github.com/noamkrausfederr/TripWallet](https://github.com/noamkrausfederr/TripWallet)
+- Assignment documents: [submission index](docs/submission.md)
+
+This README covers local setup, running tests, and deployment steps.
 
 Prerequisites
 
@@ -56,6 +62,8 @@ Running tests
 
 ```bash
 npm run test
+npm run lint
+npm run build
 ```
 
 API endpoints added
@@ -81,4 +89,4 @@ Deployment to Vercel
 
 Further documentation
 
-See `docs/assignment.md` for product spec, technical design, tests, security, scale notes, and a manual verification checklist.
+See [docs/submission.md](docs/submission.md) for the product specification, technical plan, test specification, security and scale documents, presentation outline, and manual verification checklist.
