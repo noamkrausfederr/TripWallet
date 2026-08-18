@@ -24,7 +24,7 @@ export default function Home() {
           <a href="#about">ABOUT US</a>
           <a href="#how-it-works">HOW IT WORKS</a>
           <a href="#pricing">PRICING</a>
-          <a className="nav-contact" href="mailto:hello@tripwallet.example">CONTACT US</a>
+          <a className="nav-contact" href="mailto:noam.kf2@gmail.com">CONTACT US</a>
         </nav>
 
         <section className="landing-hero" id="about">
@@ -56,7 +56,7 @@ export default function Home() {
 
         <footer className="landing-footer">
           <span>Trip Wallet</span>
-          <a href="mailto:hello@tripwallet.example">CONTACT US</a>
+          <a href="mailto:noam.kf2@gmail.com">CONTACT US</a>
         </footer>
       </section>
     </main>
