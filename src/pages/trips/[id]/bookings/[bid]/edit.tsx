@@ -251,7 +251,7 @@ export default function EditBooking() {
                     onClick={() => handleDeleteDocument(document.id)}
                     disabled={deletingDocumentId === document.id}
                   >
-                    {deletingDocumentId === document.id ? 'DELETING…' : 'DELETE DOCUMENT'}
+                    {deletingDocumentId === document.id ? 'DELETING…' : 'DELETE'}
                   </button>
                 </div>
               ))}

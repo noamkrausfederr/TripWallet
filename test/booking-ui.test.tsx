@@ -90,7 +90,7 @@ describe('Booking UI flows', () => {
 
     render(<EditBooking />);
     await screen.findByText('ticket.pdf');
-    fireEvent.click(screen.getByRole('button', { name: /delete document/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'DELETE' }));
 
     await waitFor(() => expect(deleteDocument).toHaveBeenCalledWith('doc-1'));
     expect(screen.queryByText('ticket.pdf')).not.toBeInTheDocument();
