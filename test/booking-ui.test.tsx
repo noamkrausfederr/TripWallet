@@ -25,6 +25,7 @@ vi.mock('../src/lib/docsApi', () => ({
 
 import NewBooking from '../src/pages/trips/[id]/bookings/new';
 import BookingDetails from '../src/pages/trips/[id]/bookings/[bid]';
+import EditBooking from '../src/pages/trips/[id]/bookings/[bid]/edit';
 import { deleteDocument, getSignedUrl } from '../src/lib/docsApi';
 
 const booking = {
@@ -76,18 +77,18 @@ describe('Booking UI flows', () => {
     render(<BookingDetails />);
     await screen.findByText('Flight to Rome');
     expect(screen.getByText('CONF-1')).toBeInTheDocument();
-    fireEvent.click(screen.getByText(/View document/i));
+    fireEvent.click(screen.getByRole('button', { name: 'VIEW' }));
 
     await waitFor(() => expect(getSignedUrl).toHaveBeenCalledWith('doc-1'));
     expect(openSpy).toHaveBeenCalled();
     openSpy.mockRestore();
   });
 
-  it('deletes an attached document from the booking details page', async () => {
+  it('deletes an attached document from the edit booking page', async () => {
     const { supabase } = await import('../src/lib/supabaseClient');
     supabase.from = mockBookingDetails() as any;
 
-    render(<BookingDetails />);
+    render(<EditBooking />);
     await screen.findByText('ticket.pdf');
     fireEvent.click(screen.getByRole('button', { name: /delete document/i }));
 

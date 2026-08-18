@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { supabase } from '../../../../../lib/supabaseClient';
 import { isAllowedFile, storageSafeFileName } from '../../../../../lib/fileHelpers';
 import { isBookingDateWithinTrip } from '../../../../../lib/bookingValidation';
-import { cleanupBookingDocuments } from '../../../../../lib/docsApi';
+import { cleanupBookingDocuments, deleteDocument } from '../../../../../lib/docsApi';
 import AddressAutocomplete from '../../../../../components/AddressAutocomplete';
 
 export default function EditBooking() {
@@ -12,16 +12,26 @@ export default function EditBooking() {
   const { id, bid } = router.query as { id?: string; bid?: string };
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState<any>(null);
+  const [documents, setDocuments] = useState<{ id: string; file_name: string }[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
+  const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!bid) return;
     async function load() {
       const { data } = await supabase.from('bookings').select('*').eq('id', bid).single();
       setBooking(data || null);
+      if (data) {
+        const { data: documentData } = await supabase
+          .from('booking_documents')
+          .select('id,file_name')
+          .eq('booking_id', bid)
+          .order('created_at', { ascending: true });
+        setDocuments(documentData || []);
+      }
       setLoading(false);
     }
     load();
@@ -114,6 +124,20 @@ export default function EditBooking() {
     } catch (err: any) {
       setError(`Failed to delete booking: ${err.message || err}`);
       setSaving(false);
+    }
+  }
+
+  async function handleDeleteDocument(documentId: string) {
+    if (!confirm('Delete this document?')) return;
+    setError('');
+    setDeletingDocumentId(documentId);
+    try {
+      await deleteDocument(documentId);
+      setDocuments((current) => current.filter((document) => document.id !== documentId));
+    } catch (err: any) {
+      setError(`Failed to delete document: ${err.message || err}`);
+    } finally {
+      setDeletingDocumentId(null);
     }
   }
 
@@ -214,6 +238,26 @@ export default function EditBooking() {
           <label htmlFor="file">Upload new ticket/confirmation</label>
           <input id="file" type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
         </div>
+
+        <section className="reservation-documents">
+          <h2>Manage documents</h2>
+          {documents.length ? (
+            <div className="document-list">
+              {documents.map((document) => (
+                <div key={document.id} className="document-card">
+                  <span className="document-name">{document.file_name}</span>
+                  <button
+                    className="form-link-action"
+                    onClick={() => handleDeleteDocument(document.id)}
+                    disabled={deletingDocumentId === document.id}
+                  >
+                    {deletingDocumentId === document.id ? 'DELETING…' : 'DELETE DOCUMENT'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : <p className="page-copy">No documents attached.</p>}
+        </section>
 
         {error && <p className="form-note" style={{ color: '#bf2600' }}>{error}</p>}
         {success && <p className="form-note" style={{ color: '#0f7ea4' }}>{success}</p>}
