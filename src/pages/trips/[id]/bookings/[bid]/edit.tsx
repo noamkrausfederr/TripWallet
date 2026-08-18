@@ -234,11 +234,6 @@ export default function EditBooking() {
           />
         </div>
 
-        <div className="field-group">
-          <label htmlFor="file">Upload new ticket/confirmation</label>
-          <input id="file" type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-        </div>
-
         <section className="reservation-documents">
           <h2>Manage documents</h2>
           {documents.length ? (
@@ -258,6 +253,11 @@ export default function EditBooking() {
             </div>
           ) : <p className="page-copy">No documents attached.</p>}
         </section>
+
+        <div className="field-group">
+          <label htmlFor="file">Upload new ticket/confirmation</label>
+          <input id="file" type="file" accept="application/pdf,image/jpeg,image/png,.pdf,.jpg,.jpeg,.png" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        </div>
 
         {error && <p className="form-note" style={{ color: '#bf2600' }}>{error}</p>}
         {success && <p className="form-note" style={{ color: '#0f7ea4' }}>{success}</p>}
